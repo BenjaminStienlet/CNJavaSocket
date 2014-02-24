@@ -1,7 +1,7 @@
 package client;
 
 import support.Command;
-
+import java.net;
 public class Client {
 	
 	/**
@@ -43,6 +43,7 @@ public class Client {
 			throw new IllegalArgumentException();
 		if(port <= 0)
 			throw new IllegalArgumentException();
+		
 	}
 	
 }
