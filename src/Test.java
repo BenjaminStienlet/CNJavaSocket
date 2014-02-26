@@ -1,36 +1,49 @@
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 
 public class Test {
 
-	@SuppressWarnings("resource")
-
-	public static void main(String[] args) throws UnknownHostException, IOException {
+	public static void main(String[] args) throws IllegalArgumentException, UnknownHostException {
 		
-		String uri = "213.239.154.20";
-		int port = 80;
-		Socket clientSocket = new Socket(uri,port);
-		
-		DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		System.out.println(clientSocket.toString());
-		
-		outToServer.writeBytes("GET / HTTP/1.1 \r\n");
-		System.out.println(clientSocket.toString());
-
-
-		String fromServer;
-		while((fromServer = inFromServer.readLine()) != null) {
-			System.out.println(fromServer);
-		}
-		
-		
+		String uri = "http://www.tweakers.net/index.html";
+		//host = tweakers.net
+		//resource = /index.html
+		String[] result = parseURI(uri);
+		System.out.println("Host: " + result[0] + "\nResource: " + result[1] + "\nIP: " + result[2]);
 	}
 	
+	/**
+	 * result[0] = host
+	 * result[1] = resource
+	 * result[2] = ip
+	 */
+	public static String[] parseURI(String uri) throws IllegalArgumentException, UnknownHostException {
+		String[] result = new String[3];
+		String ipRegex = "^((\\d{1,3}\\.){3}\\d{1,3})(/\\S*)?$";
+		String hostRegex1 = "^(http:\\/\\/)?(www\\.)?([^\\/]*)$";
+		String hostRegex2 = "^(http:\\/\\/)?(www\\.)?([^\\/]*)(/\\S*)$";
+		
+		if(uri.matches(ipRegex)) {
+			result[2] = uri.replaceAll(ipRegex, "$1");
+			result[1] = uri.replaceAll(ipRegex, "$3");
+			result[0] = result[2];
+		}
+		else if(uri.matches(hostRegex1)) {
+			result[0] = uri.replaceAll(hostRegex1, "$3");
+			result[1] = "/";
+			result[2] = InetAddress.getByName(result[0]).getHostAddress();
+		}
+		else if(uri.matches(hostRegex2)) {
+			result[0] = uri.replaceAll(hostRegex2, "$3");
+			result[1] = uri.replaceAll(hostRegex2, "$4");
+			result[2] = InetAddress.getByName(result[0]).getHostAddress();
+		}
+		else {
+			throw new IllegalArgumentException();
+		}
+		return result;
+	}
+ 	
 }
