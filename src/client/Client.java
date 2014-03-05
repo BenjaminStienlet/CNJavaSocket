@@ -9,23 +9,23 @@ import java.net.Socket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 public class Client {
-	
+
 	private static Http version;
-	
+
 	public static void main(String[] args) {
 		Boolean exit = false;
 		try {
-		while(exit != true) {
-			System.out.println("Input (x for exit): ");
-			BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
-			String sentence = inFromUser.readLine();
-			if(sentence.equalsIgnoreCase("x".trim())) {
-				exit = true;
-			} else {
-				Client.command(sentence);
-			}
+			while(exit != true) {
+				System.out.println("Input (x for exit): ");
+				BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
+				String sentence = inFromUser.readLine();
+				if(sentence.equalsIgnoreCase("x".trim())) {
+					exit = true;
+				} else {
+					Client.command(sentence);
+				}
 
-		}
+			}
 		}catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -53,15 +53,6 @@ public class Client {
 			throw new IllegalArgumentException();
 		}
 
-		//HTTP version
-		if (version == null) {
-			if(versionNumber.equals("1.0") || versionNumber.equalsIgnoreCase("http/1.0"))
-				version = new Http10();
-			else if(versionNumber.equals("1.1") || versionNumber.equalsIgnoreCase("http/1.1"))
-				version = new Http11();
-			else
-				throw new IllegalArgumentException();
-		}
 		//Command
 		Command command = null;
 		for(Command c : Command.values())
@@ -74,7 +65,15 @@ public class Client {
 		String host = parsed[0];
 		String resource = parsed[1];
 		String ip = parsed[2];
-		version.executeCommand(command,host,resource,ip,port);
+
+		//HTTP version
+		if(versionNumber.equals("1.0") || versionNumber.equalsIgnoreCase("http/1.0"))
+			version = new Http10(command,host,resource,ip,port);
+		else if(versionNumber.equals("1.1") || versionNumber.equalsIgnoreCase("http/1.1"))
+			version = new Http11();
+		else
+			throw new IllegalArgumentException();
+
 	}
 
 	/**
@@ -87,7 +86,7 @@ public class Client {
 		String ipRegex = "^((\\d{1,3}\\.){3}\\d{1,3})(/\\S*)?$";
 		String hostRegex1 = "^(http:\\/\\/)?(www\\.)?([^\\/]*)$";
 		String hostRegex2 = "^(http:\\/\\/)?(www\\.)?([^\\/]*)(/\\S*)$";
-		
+
 		if(uri.matches(ipRegex)) {
 			result[2] = uri.replaceAll(ipRegex, "$1");
 			result[1] = uri.replaceAll(ipRegex, "$3");
