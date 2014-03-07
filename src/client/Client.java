@@ -17,12 +17,19 @@ public class Client {
 		try {
 			while(exit != true) {
 				System.out.println("Input (x for exit): ");
+				try{
 				BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
 				String sentence = inFromUser.readLine();
 				if(sentence.equalsIgnoreCase("x".trim())) {
+					inFromUser.close();
 					exit = true;
 				} else {
+					inFromUser.close();
 					Client.command(sentence);
+				}
+				
+				} catch (Exception e) {
+					System.out.println("Something went wrong: " + e.getMessage());
 				}
 
 			}
