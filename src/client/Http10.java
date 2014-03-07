@@ -1,13 +1,16 @@
 package client;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+
+import javax.imageio.ImageIO;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -76,20 +79,24 @@ public class Http10 extends Http{
 			System.out.println("Written output");
 			String status = inFromServer.readLine();
 			System.out.println("Status:  " + status);
-			System.out.println("Header: \n");
+			System.out.println("Headers: \n");
 			String sentence;
 			String filename = null;
 			String contentType = null;
-
+			String contentLength = null;
 			//Getting headers.
 			while((sentence = inFromServer.readLine()) != null && !sentence.trim().isEmpty()) {
 				if(sentence.startsWith("Content-Type:")) {
 					contentType = sentence.split("Content-Type: ")[1].trim();
 				}
+				if(sentence.startsWith("Content-Length:")) {
+					contentLength = sentence.split("Content-Length: ")[1].trim();
+				}
 				System.out.println(sentence);
 			}
 			//Getting file information. 2 possibilities: html or image. Others are not supported.
-			if(contentType == "text/html") {
+			if(contentType.startsWith("text/html")) {
+				System.out.println("Getting HTML FILE");
 				filename = "received.html";
 				BufferedWriter outToFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "utf-8"));
 				while((sentence = inFromServer.readLine()) != null) {
@@ -107,47 +114,63 @@ public class Http10 extends Http{
 				for (int i = 0; i < imgs.size(); i++) {
 					Element el = imgs.get(i);
 					String uri = el.attr("src");
-
+					System.out.println("Found image: " + uri);
+					String hostImg;
+					String resourceImg;
+					String ipImg;
+					try {
 					String[] parsed = Client.parseURI(uri);
-					String hostImg = parsed[0];
-					String resourceImg = parsed[1];
-					String ipImg = parsed[2];
+					hostImg = parsed[0];
+					resourceImg = parsed[1];
+					ipImg = parsed[2];
+					} catch(Exception e) {
+						hostImg = host;
+						resourceImg = uri;
+						if(!resourceImg.startsWith("/")) {
+							resourceImg = "/"+resourceImg;
+						}
+						ipImg = ip;
+					}
 					//Getting images.
-					Http10 getImage = new Http10(Command.GET, hostImg, resourceImg, ipImg, this.port);
+					new Http10(Command.GET, hostImg, resourceImg, ipImg, this.port);
 				}
 
 			} else if(contentType.startsWith("image")) {
 				String imageType = contentType.split("/")[1].trim();
-				if(imageType == "jpeg" || imageType == "png" || imageType == "gif") {
+				if(imageType.equals("jpeg") || imageType.equals("png") || imageType.equals("gif")) {
 					//making new unexisting filename for the image. Limit on 100 for safety purposes.
-					for(int i = 0;i<100;i++) {
-						filename = "received"+i+"."+imageType;
-						File f = new File(filename);
-						if(f.exists() && !f.isDirectory()) {
-							break;
-						}
-					}
-					String receivedFileString = "";
-					while((sentence = inFromServer.readLine()) != null) {
-						receivedFileString += sentence.trim();
-					}
-					byte[] bytes = receivedFileString.getBytes(Charset.forName("UTF-8"));
-					FileOutputStream fos = new FileOutputStream(filename);
-					fos.write(bytes);
-					fos.close();
-					System.out.println("Image written to: " + filename);			
+//					for(int i = 0;i<100;i++) {
+//						filename = "received"+i+"."+imageType;
+//						File f = new File(filename);
+//						if(!f.exists() && !f.isDirectory()) {
+//							break;
+//						}
+//					}
+//					String receivedFileString = "";
+//					while((sentence = inFromServer.readLine()) != null) {
+//						receivedFileString += sentence;
+//					}
+//					byte[] bytes = receivedFileString.getBytes(Charset.forName("ISO-8859-15"));
+//					BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
+//					FileOutputStream fos = new FileOutputStream(filename);
+//					fos.write(bytes);
+//					fos.close();
+//					System.out.println("Image written to: " + filename);
+					System.out.println("\nImage type: " + imageType);
+					System.out.println("Image length: " + contentLength);
 				} else {
 					System.out.println("This client does not support the image type: "+imageType);
 				}
+				System.out.println("closing socket");
+				clientSocket.close();
+
 				
 			} else  {
 				System.out.println("Content-type: " + contentType + " Not implemented.");
+				clientSocket.close();
 			}
 			
 
-			System.out.println("Written to file: " + filename);
-			System.out.println("closing socket");
-			clientSocket.close();
 
 
 

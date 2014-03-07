@@ -14,26 +14,29 @@ public class Client {
 
 	public static void main(String[] args) {
 		Boolean exit = false;
+		int errorCounter = 0;
 		try {
-			while(exit != true) {
+			while(exit != true && errorCounter <10) {
 				System.out.println("Input (x for exit): ");
-				try{
+				try {
 				BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
 				String sentence = inFromUser.readLine();
 				if(sentence.equalsIgnoreCase("x".trim())) {
-					inFromUser.close();
 					exit = true;
 				} else {
-					inFromUser.close();
 					Client.command(sentence);
 				}
-				
-				} catch (Exception e) {
-					System.out.println("Something went wrong: " + e.getMessage());
+				}catch (Exception e) {
+					System.out.println("Something went wrong. Try again.");
+					System.out.println(e.getMessage());
+					errorCounter++;
 				}
+				
 
 			}
+			System.out.println("exit");
 		}catch (Exception e) {
+			System.out.println("Uncatched exception: closing program.");
 			System.out.println(e.getMessage());
 		}
 	}
@@ -77,7 +80,7 @@ public class Client {
 		if(versionNumber.equals("1.0") || versionNumber.equalsIgnoreCase("http/1.0"))
 			version = new Http10(command,host,resource,ip,port);
 		else if(versionNumber.equals("1.1") || versionNumber.equalsIgnoreCase("http/1.1"))
-			version = new Http11();
+			version = new Http11(command,host,resource,ip,port);
 		else
 			throw new IllegalArgumentException();
 

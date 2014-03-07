@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import support.Command;
 
-public abstract class Http implements Runnable {
+public abstract class Http {
 	
 	protected String host;
 	protected String resource;
@@ -31,7 +31,7 @@ public abstract class Http implements Runnable {
 			System.out.println("Socket estabilished: " + clientSocket.toString() );
 
 			outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+			inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(),"ISO-8859-15"));
 			String outputSentence = command + " " + resource + " " + toString();
 			System.out.println("Input: " + outputSentence);
 			outToServer.writeBytes(outputSentence + "\n");
