@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import support.Command;
 
-public abstract class Http {
+public abstract class Http implements Runnable {
 	
 	protected String host;
 	protected String resource;
@@ -32,7 +32,6 @@ public abstract class Http {
 
 			outToServer = new DataOutputStream(clientSocket.getOutputStream());
 			inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
 			String outputSentence = command + " " + resource + " " + toString();
 			System.out.println("Input: " + outputSentence);
 			outToServer.writeBytes(outputSentence + "\n");
@@ -52,11 +51,15 @@ public abstract class Http {
 				post();
 			else if(command.equals(Command.HEAD))
 				head();
+			
+			outToServer.close();
+			inFromServer.close();
 		} catch (IOException e) {
 			System.out.println(e.toString());
 		} 
 
 	}
+	
 	
 	protected abstract void put();
 	protected abstract void get();
