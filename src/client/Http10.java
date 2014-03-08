@@ -104,7 +104,7 @@ public class Http10 extends Http{
 			//Getting file information. 2 possibilities: html or image. Others are not supported.
 			if(contentType.startsWith("text/html")) {
 				System.out.println("Getting HTML FILE");
-				filename = "received.html";
+				filename = outputDir + System.getProperty("file.separator") + outputFile;
 				BufferedWriter outToFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "utf-8"));
 				while((sentence = inFromServer.readLine()) != null) {
 					outToFile.write(sentence);

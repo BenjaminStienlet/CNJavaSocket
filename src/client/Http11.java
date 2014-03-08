@@ -1,6 +1,10 @@
 package client;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,6 +18,7 @@ import org.jsoup.select.Elements;
 
 import support.Command;
 
+@SuppressWarnings("deprecation")
 public class Http11 extends Http {
 
 
@@ -33,7 +38,7 @@ public class Http11 extends Http {
 	@Override
 	protected void initialRequest(Command command) throws IOException {
 		String outputSentence = command + " " + resource + " " + toString();
-		outputSentence += "\n" + "Host: " + host + ":" + port;
+		outputSentence += "\n" + "Host: " + host;
 		System.out.println("Input: " + outputSentence);
 		outToServer.writeBytes(outputSentence + "\n");
 	}
@@ -70,18 +75,19 @@ public class Http11 extends Http {
 				System.out.println(sentence);
 			}
 			//Getting file information. 2 possibilities: html or image. Others are not supported.
-			if(contentType.startsWith("text/html")) {
+			
+			if(status.contains("200") && contentType.startsWith("text/html")) {
 				System.out.println("Getting HTML FILE");
-				filename = "received.html";
+				filename = outputDir + System.getProperty("file.separator") + outputFile;
 				BufferedWriter outToFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "utf-8"));
-				while((sentence = inFromServer.readLine()) != null && sentence.getBytes().length <= contentLength) {
-					outToFile.write(sentence);
-					contentLength -= sentence.getBytes().length;
-				}
+				
+				byte[] bytes = new byte[contentLength];
+				inFromServer.readFully(bytes, 0, contentLength);
+				sentence = new String(bytes, "UTF-8");
+				outToFile.write(sentence);
+				
 				outToFile.close();
 				System.out.println("Written to file: " + filename);
-				System.out.println("closing socket");
-				clientSocket.close();
 
 				//Getting the images out of the html.
 				File input = new File(filename);
@@ -103,7 +109,7 @@ public class Http11 extends Http {
 						hostImg = host;
 						resourceImg = uri;
 						if(!resourceImg.startsWith("/")) {
-							resourceImg = "/"+resourceImg;
+							resourceImg = System.getProperty("file.separator") + resourceImg;
 						}
 						ipImg = ip;
 					}
@@ -111,39 +117,44 @@ public class Http11 extends Http {
 					executeGet(hostImg, resourceImg, ipImg);
 				}
 
-			} else if(contentType.startsWith("image")) {
+			} else if(status.contains("200") && contentType.startsWith("image")) {
 				String imageType = contentType.split("/")[1].trim();
 				if(imageType.equals("jpeg") || imageType.equals("png") || imageType.equals("gif")) {
-					//making new unexisting filename for the image. Limit on 100 for safety purposes.
-//					for(int i = 0;i<100;i++) {
-//						filename = "received"+i+"."+imageType;
-//						File f = new File(filename);
-//						if(!f.exists() && !f.isDirectory()) {
-//							break;
-//						}
-//					}
+//					making new unexisting filename for the image. Limit on 100 for safety purposes.
+
+					filename = System.getProperty("user.dir") + System.getProperty("file.separator") + outputDir + resource;
 //					String receivedFileString = "";
 //					while((sentence = inFromServer.readLine()) != null) {
 //						receivedFileString += sentence;
 //					}
-//					byte[] bytes = receivedFileString.getBytes(Charset.forName("ISO-8859-15"));
-//					BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
-//					FileOutputStream fos = new FileOutputStream(filename);
-//					fos.write(bytes);
-//					fos.close();
-//					System.out.println("Image written to: " + filename);
+					
+					byte[] bytes = new byte[contentLength];
+					
+					try {
+						inFromServer.readFully(bytes, 0, contentLength);
+						File file = new File(filename);
+						if (!file.exists()) {
+							file.getParentFile().mkdirs();
+							file.createNewFile();
+						}
+						FileOutputStream writer = new FileOutputStream(file);
+						writer.write(bytes);					
+						writer.close();
+						System.out.println("Image written to: " + filename);
+					} catch(IOException e) {
+						System.out.println(e.getMessage());
+					}
+
 					System.out.println("\nImage type: " + imageType);
 					System.out.println("Image length: " + contentLength);
 				} else {
 					System.out.println("This client does not support the image type: "+imageType);
 				}
-				System.out.println("closing socket");
-				clientSocket.close();
-
-				
 			} else  {
-				System.out.println("Content-type: " + contentType + " Not implemented.");
-				clientSocket.close();
+				if (status.contains("200"))
+					System.out.println("Content-type: " + contentType + " Not implemented.");
+				else
+					System.out.println("Status not ok");
 			}
 			
 		} catch (Exception e) {
@@ -155,19 +166,39 @@ public class Http11 extends Http {
 	private void executeGet(String hostImg, String resourceImg, String ipImg) {
 		if (!ipImg.equals(ip)) {
 			try {
+				System.out.println("Closing socket");
 				clientSocket.close();
+				outToServer.close();
+				inFromServer.close();
+				
 				clientSocket = new Socket(ipImg, port);
-				ip = ipImg;
-				host = hostImg;
-				resource = resourceImg;
+				outToServer = new DataOutputStream(clientSocket.getOutputStream());
+				inFromServer = new DataInputStream(clientSocket.getInputStream());
 				System.out.println("Socket estabilished: " + clientSocket.toString());
-				initialRequest(Command.GET);
-				get();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				if (clientSocket.isClosed()) {
+					clientSocket = new Socket(ip, port);
+					System.out.println("Socket estabilished: " + clientSocket.toString() );
+					outToServer = new DataOutputStream(clientSocket.getOutputStream());
+					inFromServer = new DataInputStream(clientSocket.getInputStream());
+				}
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+		ip = ipImg;
+		host = hostImg;
+		resource = resourceImg;
+		try {
+			initialRequest(Command.GET);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		get();
 	}
 
 	@Override

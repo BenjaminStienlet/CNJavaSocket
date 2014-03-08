@@ -1,7 +1,9 @@
 package client;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
@@ -12,13 +14,16 @@ import support.Command;
 
 public abstract class Http {
 	
+	protected String outputDir = "output";
+	protected String outputFile = "received.html";
+	
 	protected String host;
 	protected String resource;
 	protected String ip;
 	protected int port;
 	protected Socket clientSocket = null;
 	protected DataOutputStream outToServer;
-	protected BufferedReader inFromServer;
+	protected DataInputStream inFromServer;
 
 	public Http(Command command, String host, String resource, String ip, int port) {
 		try {
@@ -40,6 +45,11 @@ public abstract class Http {
 		this.ip = ip;
 		this.port = port;
 		
+		File file = new File(outputDir);
+		if (! file.exists()) {
+			file.mkdirs();
+		}
+		
 		try {
 			clientSocket = socket;
 			if (!clientSocket.isConnected()) {
@@ -48,7 +58,7 @@ public abstract class Http {
 			}
 
 			outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+			inFromServer = new DataInputStream(clientSocket.getInputStream());
 			
 			initialRequest(command);
 			
