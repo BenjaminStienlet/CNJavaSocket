@@ -21,32 +21,36 @@ public abstract class Http {
 	protected BufferedReader inFromServer;
 
 	public Http(Command command, String host, String resource, String ip, int port) {
+		try {
+			Socket socket = new Socket(ip, port);
+			System.out.println("Socket estabilished: " + socket.toString() );
+			initialize(command, host, resource, ip, port, socket);
+		} catch (IOException e) {
+			System.out.println(e.toString());
+		} 
+	}
+	
+	public Http(Command command, String host, String resource, String ip, int port, Socket socket) {
+		initialize(command, host, resource, ip, port, socket);
+	}
+	
+	private void initialize(Command command, String host, String resource, String ip, int port, Socket socket) {
 		this.host = host;
 		this.resource = resource;
 		this.ip = ip;
 		this.port = port;
 		
 		try {
-			clientSocket = new Socket(ip, port);
-			System.out.println("Socket estabilished: " + clientSocket.toString() );
+			clientSocket = socket;
+			if (!clientSocket.isConnected()) {
+				clientSocket = new Socket(ip, port);
+				System.out.println("Socket estabilished: " + clientSocket.toString() );
+			}
 
 			outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(),"ISO-8859-15"));
+			inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			
-			String outputSentence = command + " " + resource + " " + toString();
-			System.out.println("Input: " + outputSentence);
-			outToServer.writeBytes(outputSentence + "\n");
-
-//			switch (command) {
-//				case GET: get();
-//				break;
-//				case PUT: put();
-//				break;
-//				case POST: post();
-//				break;	
-//				case HEAD: head();
-//				break;
-//			}
+			initialRequest(command);
 			
 			if (command.equals(Command.GET))
 				get();
@@ -62,10 +66,9 @@ public abstract class Http {
 		} catch (IOException e) {
 			System.out.println(e.toString());
 		} 
-
 	}
 	
-	
+	protected abstract void initialRequest(Command command) throws IOException;
 	protected abstract void put();
 	protected abstract void get();
 	protected abstract void head();

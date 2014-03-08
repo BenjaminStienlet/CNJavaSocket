@@ -13,30 +13,23 @@ public class Client {
 	public static void main(String[] args) {
 		Boolean exit = false;
 		int errorCounter = 0;
-		try {
-			while(exit != true && errorCounter <10) {
-				System.out.println("Input (x for exit): ");
-				try {
-					BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
-					String sentence = inFromUser.readLine();
-					if(sentence.equalsIgnoreCase("x".trim())) {
-						exit = true;
-					} else {
-						Client.command(sentence);
-					}
-				}catch (Exception e) {
-					System.out.println("Something went wrong. Try again.");
-					System.out.println(e.getMessage());
-					errorCounter++;
+		while(exit != true && errorCounter <10) {
+			System.out.println("Input (x for exit): ");
+			try {
+				BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
+				String sentence = inFromUser.readLine();
+				if(sentence.equalsIgnoreCase("x".trim())) {
+					exit = true;
+				} else {
+					Client.command(sentence);
 				}
-
-
+			}catch (Exception e) {
+				System.out.println("Something went wrong. Try again.");
+				System.out.println(e.getMessage());
+				errorCounter++;
 			}
-			System.out.println("exit");
-		}catch (Exception e) {
-			System.out.println("Uncatched exception: closing program.");
-			System.out.println(e.getMessage());
 		}
+		System.out.println("exit");
 	}
 
 	/**

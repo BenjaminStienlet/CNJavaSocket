@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
@@ -37,6 +38,13 @@ public class Http10 extends Http{
 	@Override
 	public String toString() {
 		return "HTTP/1.0";
+	}
+	
+	@Override
+	protected void initialRequest(Command command) throws IOException {
+		String outputSentence = command + " " + resource + " " + toString();
+		System.out.println("Input: " + outputSentence);
+		outToServer.writeBytes(outputSentence + "\n");
 	}
 
 	@Override
@@ -149,7 +157,7 @@ public class Http10 extends Http{
 //					while((sentence = inFromServer.readLine()) != null) {
 //						receivedFileString += sentence;
 //					}
-//					byte[] bytes = receivedFileString.getBytes(Charset.forName("ISO-8859-15"));
+//					byte[] bytes = receivedFileString.getBytes(Charset.forName("UTF-8"));
 //					BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
 //					FileOutputStream fos = new FileOutputStream(filename);
 //					fos.write(bytes);
@@ -157,6 +165,7 @@ public class Http10 extends Http{
 //					System.out.println("Image written to: " + filename);
 					System.out.println("\nImage type: " + imageType);
 					System.out.println("Image length: " + contentLength);
+//					System.out.println("Byte-array length: " + bytes.length);
 				} else {
 					System.out.println("This client does not support the image type: "+imageType);
 				}
