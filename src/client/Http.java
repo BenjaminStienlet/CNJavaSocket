@@ -32,15 +32,20 @@ public abstract class Http {
 
 			outToServer = new DataOutputStream(clientSocket.getOutputStream());
 			inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(),"ISO-8859-15"));
+			
 			String outputSentence = command + " " + resource + " " + toString();
 			System.out.println("Input: " + outputSentence);
 			outToServer.writeBytes(outputSentence + "\n");
 
 //			switch (command) {
-//				case PUT: put();
 //				case GET: get();
+//				break;
+//				case PUT: put();
+//				break;
 //				case POST: post();
+//				break;	
 //				case HEAD: head();
+//				break;
 //			}
 			
 			if (command.equals(Command.GET))

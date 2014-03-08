@@ -74,14 +74,12 @@ public class Response10 extends Response {
 		}
 		catch(Exception e) {
 			try{
-			outToClient.writeBytes("HTTP/1.0 500 Internal Server Error\n\n");
-			System.out.println(e.toString());
+				outToClient.writeBytes("HTTP/1.0 500 Internal Server Error\n\n");
+				System.out.println(e.toString());
 			} catch (Exception e2) {
 				System.out.println(e2.toString());
 			}
 		}
-		
-
 	}
 
 	@Override
@@ -93,10 +91,11 @@ public class Response10 extends Response {
 			File file = new File(uri);
 			if(file.exists() && !file.isDirectory()) {
 				outToClient.writeBytes("HTTP/1.0 200 OK\n\n");
-				String content = new Scanner(file).useDelimiter("\\Z").next();
+				Scanner scan = new Scanner(file);
+				String content = scan.useDelimiter("\\Z").next();
 				System.out.println("Content of file: \n" + content);
 				outToClient.writeBytes(content);
-
+				scan.close();
 			} else {
 				outToClient.writeBytes("HTTP/1.0 404 File Not Found\n\n");
 			}
@@ -105,7 +104,6 @@ public class Response10 extends Response {
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
 		}
-		
 	}
 
 	@Override
@@ -126,10 +124,12 @@ public class Response10 extends Response {
 				Calendar cal = Calendar.getInstance();
 				DateFormat dateFormat = new SimpleDateFormat("E, dd/MM/yyyy HH:mm:ss z");
 				outToClient.writeBytes("Date: "+ dateFormat.format(cal.getTime()) + "\n");
-				String content = new Scanner(file).useDelimiter("\\Z").next();
+				Scanner scan = new Scanner(file);
+				String content = scan.useDelimiter("\\Z").next();
 				outToClient.writeBytes("Content-Length: " + content.length() + "\n");
 				outToClient.writeBytes("Content-Type: text/html\n");
 				outToClient.writeBytes("\n");
+				scan.close();
 			} else {
 				outToClient.writeBytes("HTTP/1.0 404 File Not Found\n\n");
 			}
@@ -139,6 +139,5 @@ public class Response10 extends Response {
 			System.out.println(e.getMessage());
 
 		}
-		
 	}
 }

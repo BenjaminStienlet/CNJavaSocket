@@ -3,14 +3,12 @@ package client;
 import support.Command;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.InputStreamReader;
-import java.net.Socket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-public class Client {
 
-	private static Http version;
+
+public class Client {
 
 	public static void main(String[] args) {
 		Boolean exit = false;
@@ -19,19 +17,19 @@ public class Client {
 			while(exit != true && errorCounter <10) {
 				System.out.println("Input (x for exit): ");
 				try {
-				BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
-				String sentence = inFromUser.readLine();
-				if(sentence.equalsIgnoreCase("x".trim())) {
-					exit = true;
-				} else {
-					Client.command(sentence);
-				}
+					BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
+					String sentence = inFromUser.readLine();
+					if(sentence.equalsIgnoreCase("x".trim())) {
+						exit = true;
+					} else {
+						Client.command(sentence);
+					}
 				}catch (Exception e) {
 					System.out.println("Something went wrong. Try again.");
 					System.out.println(e.getMessage());
 					errorCounter++;
 				}
-				
+
 
 			}
 			System.out.println("exit");
@@ -44,9 +42,9 @@ public class Client {
 	/**
 	 * 
 	 * 
-	 * @param input
-	 * @throws IllegalArgumentException
-	 * @throws UnknownHostException 
+	 * @param 	input
+	 * @throws 	IllegalArgumentException
+	 * @throws 	UnknownHostException
 	 */
 	public static void command(String input) throws IllegalArgumentException, UnknownHostException {
 		String commandInput = null;
@@ -78,18 +76,25 @@ public class Client {
 
 		//HTTP version
 		if(versionNumber.equals("1.0") || versionNumber.equalsIgnoreCase("http/1.0"))
-			version = new Http10(command,host,resource,ip,port);
+			new Http10(command,host,resource,ip,port);
 		else if(versionNumber.equals("1.1") || versionNumber.equalsIgnoreCase("http/1.1"))
-			version = new Http11(command,host,resource,ip,port);
+			new Http11(command,host,resource,ip,port);
 		else
 			throw new IllegalArgumentException();
 
 	}
 
 	/**
-	 * result[0] = host
-	 * result[1] = resource
-	 * result[2] = ip
+	 * Parses the given uri and returns the host and the ip- and resource-address.
+	 * 
+	 * @result	result[0] = host
+	 * 			result[1] = resource
+	 * 			result[2] = ip
+	 * @throws	IllegalArgumentException
+	 * 			Thrown when the given string does not follow the format of a uri.
+	 * @throws	UnknownHostException
+	 * 			Thrown when no IP address for the host could be found, 
+	 * 			or when a scope_id was specified for a global IPv6 address.
 	 */
 	public static String[] parseURI(String uri) throws IllegalArgumentException, UnknownHostException {
 		String[] result = new String[3];

@@ -29,8 +29,7 @@ public class Http10 extends Http{
 	 * @param ip
 	 * @param port
 	 */
-	public Http10(Command command, String host, String resource, String ip,
-			int port) {
+	public Http10(Command command, String host, String resource, String ip, int port) {
 		super(command, host, resource, ip, port);
 	}
 
@@ -119,10 +118,10 @@ public class Http10 extends Http{
 					String resourceImg;
 					String ipImg;
 					try {
-					String[] parsed = Client.parseURI(uri);
-					hostImg = parsed[0];
-					resourceImg = parsed[1];
-					ipImg = parsed[2];
+						String[] parsed = Client.parseURI(uri);
+						hostImg = parsed[0];
+						resourceImg = parsed[1];
+						ipImg = parsed[2];
 					} catch(Exception e) {
 						hostImg = host;
 						resourceImg = uri;
@@ -170,10 +169,6 @@ public class Http10 extends Http{
 				clientSocket.close();
 			}
 			
-
-
-
-
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
