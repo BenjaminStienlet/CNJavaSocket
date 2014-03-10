@@ -51,6 +51,8 @@ public abstract class Response {
 	protected abstract void post();
 	
 	protected abstract void head();
+	
+	public abstract String toString();
 
 	/**
 	 * @throws IOException

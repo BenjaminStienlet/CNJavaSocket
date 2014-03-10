@@ -28,7 +28,7 @@ public class Handler implements Runnable {
 			ArrayList<String> headers = new ArrayList<String>();
 			String header;
 			System.out.println("Headers:");
-			while(!(header = inFromClient.readLine()).equalsIgnoreCase("")) {
+			while((header = inFromClient.readLine()) != null && !header.equalsIgnoreCase("")) {
 				System.out.println(header);
 				headers.add(header);
 			}
@@ -63,20 +63,10 @@ public class Handler implements Runnable {
 		Response version;
 		if(versionNumber.equals("1.0") || versionNumber.equalsIgnoreCase("http/1.0"))
 			version = new Response10(command, uri, inFromClient, outToClient, socket, headers);
-		else if(versionNumber.equals("1.1") || versionNumber.equalsIgnoreCase("http/1.1")) {
-			try {
-				System.out.println("Returning unsupported operation.");
-				outToClient.writeBytes("HTTP/1.1 505 HTTP Version Not Supported\n\n");
-				socket.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		}
+		else if(versionNumber.equals("1.1") || versionNumber.equalsIgnoreCase("http/1.1"))
+			version = new Response11(command, uri, inFromClient, outToClient, socket, headers);
 		else
 			throw new IllegalArgumentException();
-
 		
 	}
 }

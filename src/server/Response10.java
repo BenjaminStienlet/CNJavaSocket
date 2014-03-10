@@ -25,6 +25,10 @@ public class Response10 extends Response {
 			Socket socket, ArrayList<String> headers) {
 		super(command, uri, inFromClient, outToClient, socket, headers);
 	}
+	
+	public String toString() {
+		return "HTTP/1.0";
+	}
 
 	@Override
 	protected void put() {
