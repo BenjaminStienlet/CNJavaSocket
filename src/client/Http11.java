@@ -34,8 +34,11 @@ public class Http11 extends Http {
 
 	@Override
 	protected void put() {
-		// TODO Auto-generated method stub
-
+		try{
+			executePut();
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	@Override
@@ -49,40 +52,7 @@ public class Http11 extends Http {
 			}
 			System.out.println("Status:  " + status);
 			System.out.println("Headers: \n");
-			String sentence;
-			String contentType = null;
-			String newLocation = null;
-			int contentLength = 0;
-			//Getting headers.
-			while((sentence = inFromServer.readLine()) != null && !sentence.trim().isEmpty()) {
-				if(sentence.startsWith("Content-Type:")) {
-					contentType = sentence.split("Content-Type: ")[1].trim();
-				}
-				if(sentence.startsWith("Content-Length:")) {
-					contentLength = Integer.parseInt(sentence.split("Content-Length: ")[1].trim());
-				}
-				if(sentence.startsWith("Location: ")) {
-					newLocation = sentence.split("Location: ")[1].trim();
-				}
-
-				System.out.println(sentence);
-			}
-			//Getting file information. 2 possibilities: html or image. Others are not supported.
-
-			if(status.contains("200") && contentType.startsWith("text/html")) {
-				getHtml(contentLength);
-			}
-			else if(status.contains("200") && contentType.startsWith("image")) {
-				getImage(contentType, contentLength);
-			} else if((status.contains("301") || status.contains("302") ||status.contains("307") ||status.contains("308")) && newLocation != null ) {
-				getRedirection(newLocation,contentLength);
-			} else  {
-				if (status.contains("200"))
-					System.out.println("Content-type: " + contentType + " Not implemented.");
-				else
-					System.out.println("Status not ok: " + status);
-			}
-
+			executeGet(status);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -130,17 +100,16 @@ public class Http11 extends Http {
 
 	@Override
 	protected void head() {
-		// TODO Auto-generated method stub
-
+		try{
+			executeHead();
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
 	}
 
 	@Override
 	protected void post() {
-		// TODO Auto-generated method stub
-
+		this.put();
 	}
-
-
-
 
 }

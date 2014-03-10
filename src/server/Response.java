@@ -9,10 +9,6 @@ import java.util.ArrayList;
 
 import support.Command;
 
-/**
- * @author SWOP Group 3
- * @version 1.0
- */
 public abstract class Response {
 
 	protected String uri;

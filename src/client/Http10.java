@@ -1,8 +1,6 @@
 package client;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import support.Command;
 
@@ -37,25 +35,7 @@ public class Http10 extends Http{
 	@Override
 	public void put() {
 		try{
-			System.out.println("What do you want to send? (terminate with enter)");
-			BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
-			String input = "";
-			String inputString;
-			while(!(inputString = inFromUser.readLine()).equals("")) {
-				input += " " + inputString;
-			}
-			input = input.trim();
-			outToServer.writeBytes("Content-Length: " + input.getBytes().length + "\n\n");
-			outToServer.writeBytes(input+"\n");
-
-			System.out.println("Written output");
-			String status = inFromServer.readLine();
-			System.out.println("Status:  " + status);
-			System.out.println("Header: \n");
-			String sentence1;
-			while((sentence1 = inFromServer.readLine()) != null && !sentence1.trim().isEmpty()) {
-				System.out.println(sentence1);
-			}
+			executePut();
 			if(!clientSocket.isClosed()) {
 				System.out.println("closing socket");
 				clientSocket.close();
@@ -64,7 +44,6 @@ public class Http10 extends Http{
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-
 	}
 
 	@Override
@@ -75,45 +54,11 @@ public class Http10 extends Http{
 			String status = inFromServer.readLine();
 			System.out.println("Status:  " + status);
 			System.out.println("Headers: \n");
-			String sentence;
-			String contentType = null;
-			String newLocation = null;
-			int contentLength = 0;
-			//Getting headers.
-			while((sentence = inFromServer.readLine()) != null && !sentence.trim().isEmpty()) {
-				if(sentence.startsWith("Content-Type:")) {
-					contentType = sentence.split("Content-Type: ")[1].trim();
-				}
-				if(sentence.startsWith("Content-Length:")) {
-					contentLength = Integer.parseInt(sentence.split("Content-Length: ")[1].trim());
-				}
-				if(sentence.startsWith("Location: ")) {
-					newLocation = sentence.split("Location: ")[1].trim();
-				}
-				System.out.println(sentence);
-			}
-			//Getting file information. 2 possibilities: html or image. Others are not supported.
-			if(contentType.startsWith("text/html") && status.contains("200")) {
-				this.getHtml(contentLength);
-			} else if(contentType.startsWith("image") && status.contains("200")) {
-				this.getImage(contentType, contentLength);
-			} else if((status.contains("301") || status.contains("302") ||status.contains("307") ||status.contains("308")) && newLocation != null ) {
-				this.getRedirection(newLocation,contentLength);
-
-			} else {
-				if (status.contains("200"))
-					System.out.println("Content-type: " + contentType + " Not implemented.");
-				else
-					System.out.println("Status not ok: " + status);
-			}
-			
-			if(!clientSocket.isClosed()) {
-				System.out.println("closing socket");
+			executeGet(status);
+			if (!clientSocket.isClosed()) {
+				System.out.println("Closing socket");
 				clientSocket.close();
 			}
-
-
-
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -124,24 +69,18 @@ public class Http10 extends Http{
 	@Override
 	public void head() {
 		try{
-			outToServer.writeBytes("\n");
-			System.out.println("Written output");
-			String status = inFromServer.readLine();
-			System.out.println("Status:  " + status);
-			System.out.println("Header: \n");
-			String sentence1;
-			while((sentence1 = inFromServer.readLine()) != null && !sentence1.trim().isEmpty()) {
-				System.out.println(sentence1);
-			}
+			executeHead();
 
-			System.out.println("closing socket");
-			clientSocket.close();
+			if (!clientSocket.isClosed()) {
+				System.out.println("Closing socket");
+				clientSocket.close();
+			}
 
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-
 	}
+
 
 	@Override
 	public void post() {
