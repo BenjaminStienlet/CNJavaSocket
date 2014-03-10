@@ -7,9 +7,10 @@ public class Server {
 	
 	public static void main(String[] args) {
 		try {
+			boolean exit = false;
 			ServerSocket welcomeSocket = new ServerSocket(6789);
 			System.out.println("Socket estabilished.");
-			while(true) {
+			while(!exit) {
 				Socket connectionSocket = welcomeSocket.accept();
 				if (connectionSocket != null) {
 					Handler h = new Handler(connectionSocket);
@@ -17,6 +18,7 @@ public class Server {
 					thread.start();
 				}
 			}
+			welcomeSocket.close();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
