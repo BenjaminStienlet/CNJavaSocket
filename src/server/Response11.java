@@ -5,6 +5,7 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -38,29 +39,40 @@ public class Response11 extends Response {
 			if (headers.contains("Connection: close")){
 				socket.close();
 			}
-				
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
-
 		}
 	}
 
 	@Override
 	protected void get() {
-		// TODO Auto-generated method stub
-		
+		try {
+			outToClient.writeBytes(toString() + " 100 Continue\n\n");
+			executeGet();
+			if (headers.contains("Connection: close")){
+				socket.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	protected void put() {
-		// TODO Auto-generated method stub
-		
+		try {
+			outToClient.writeBytes(toString() + " 100 Continue\n\n");
+			extractPut();
+			if (headers.contains("Connection: close")){
+				socket.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	protected void post() {
-		// TODO Auto-generated method stub
-		
+		put();
 	}
 	
 }
