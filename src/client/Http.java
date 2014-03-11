@@ -20,9 +20,11 @@ import org.jsoup.select.Elements;
 
 import support.Command;
 
+
 @SuppressWarnings("deprecation")
 public abstract class Http {
-
+	
+	//Directory where the output of the GET command is stored
 	protected String outputDir = "output";
 	protected String outputFile = "received.html";
 
@@ -30,7 +32,7 @@ public abstract class Http {
 	protected String resource;
 	protected String ip;
 	protected int port;
-	protected Socket clientSocket = null;
+	protected Socket clientSocket;
 	protected DataOutputStream outToServer;
 	protected DataInputStream inFromServer;
 
@@ -48,12 +50,16 @@ public abstract class Http {
 		initialize(command, host, resource, ip, port, socket);
 	}
 
+	/**
+	 * Initializes a HTTP object and executes the given command
+	 */
 	private void initialize(Command command, String host, String resource, String ip, int port, Socket socket) {
 		this.host = host;
 		this.resource = resource;
 		this.ip = ip;
 		this.port = port;
-
+		
+		// Create the output folder
 		File file = new File(outputDir);
 		if (! file.exists()) {
 			file.mkdirs();
@@ -61,7 +67,7 @@ public abstract class Http {
 
 		try {
 			clientSocket = socket;
-			if (!clientSocket.isConnected()) {
+			if (clientSocket.isClosed()) {
 				clientSocket = new Socket(ip, port);
 				System.out.println("Socket estabilished: " + clientSocket.toString() );
 			}
@@ -87,15 +93,34 @@ public abstract class Http {
 		} 
 	}
 
+	/**
+	 * Sends the initial request line to the server and receives the initial response line
+	 */
 	protected abstract void initialRequest(Command command) throws IOException;
+	
+	/**
+	 * Executes a PUT command
+	 */
 	protected abstract void put();
+	
+	/**
+	 * Executes a GET command
+	 */
 	protected abstract void get();
+	
+	/**
+	 * Executes a HEAD command
+	 */
 	protected abstract void head();
+	
+	/**
+	 * Executes a POST command
+	 */
 	protected abstract void post();
+	
 	protected abstract void executeGet(String host2, String resource2,String ip);
 
-	protected void getHtml(int contentLength) throws UnsupportedEncodingException,
-	FileNotFoundException, IOException {
+	protected void getHtml(int contentLength) throws UnsupportedEncodingException, FileNotFoundException, IOException {
 		String sentence;
 		String filename;
 
@@ -229,9 +254,6 @@ public abstract class Http {
 		executeGet(host2, resource2, ip2);
 	}
 
-	/**
-	 * @throws IOException
-	 */
 	protected void executeHead() throws IOException {
 		outToServer.writeBytes("\n");
 		System.out.println("Written output");
@@ -252,9 +274,6 @@ public abstract class Http {
 		}
 	}
 
-	/**
-	 * @throws IOException
-	 */
 	protected void executePut() throws IOException {
 		System.out.println("What do you want to send? (terminate with enter)");
 		BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
@@ -285,12 +304,6 @@ public abstract class Http {
 		}
 	}
 
-	/**
-	 * @param status
-	 * @throws IOException
-	 * @throws UnsupportedEncodingException
-	 * @throws FileNotFoundException
-	 */
 	protected void executeGet(String status) throws IOException,
 			UnsupportedEncodingException, FileNotFoundException {
 				String sentence;

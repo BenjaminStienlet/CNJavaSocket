@@ -8,13 +8,6 @@ import support.Command;
 public class Http10 extends Http{
 
 
-	/**
-	 * @param command
-	 * @param host
-	 * @param resource
-	 * @param ip
-	 * @param port
-	 */
 	public Http10(Command command, String host, String resource, String ip, int port) {
 		super(command, host, resource, ip, port);
 	}
@@ -25,6 +18,9 @@ public class Http10 extends Http{
 		return "HTTP/1.0";
 	}
 
+	/**
+	 * Sends the initial request line to the server and receives the initial response line
+	 */
 	@Override
 	protected void initialRequest(Command command) throws IOException {
 		String outputSentence = command + " " + resource + " " + toString();

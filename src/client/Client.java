@@ -7,7 +7,17 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-
+/**
+ * A HTPP client
+ * 
+ * Arguments: HTTPCommand URI Port HTTPversion
+ * - HTTPCommand:	HEAD, GET, PUT or POST
+ * - URI:			uniform resource identifier, e.g. www.google.com
+ * - Port:			the port number
+ * - HTTPversion:	HTTP/1.0 or HTTP/1.1
+ * 
+ * @author	Tom Stappaerts, Benjamin Stienlet
+ */
 public class Client {
 
 	public static void main(String[] args) {
@@ -33,11 +43,14 @@ public class Client {
 	}
 
 	/**
-	 * 
+	 * Parses and executes the given command.
 	 * 
 	 * @param 	input
+	 * 			The command to execute
 	 * @throws 	IllegalArgumentException
+	 * 			Thrown when the given string does not follow the specified format
 	 * @throws 	UnknownHostException
+	 * 			(See parseURI)
 	 */
 	public static void command(String input) throws IllegalArgumentException, UnknownHostException {
 		String commandInput = null;
@@ -59,13 +72,15 @@ public class Client {
 		for(Command c : Command.values())
 			if(commandInput.equalsIgnoreCase(c.toString())) command = c;
 		if(command == null) throw new IllegalArgumentException();
-		//Port
-		if(port <= 0) throw new IllegalArgumentException();
-
+		
+		//URI
 		String[] parsed = parseURI(uri);
 		String host = parsed[0];
 		String resource = parsed[1];
 		String ip = parsed[2];
+		
+		//Port
+		if(port <= 0) throw new IllegalArgumentException();
 
 		//HTTP version
 		if(versionNumber.equals("1.0") || versionNumber.equalsIgnoreCase("http/1.0"))

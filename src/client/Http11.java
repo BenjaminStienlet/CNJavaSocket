@@ -24,6 +24,11 @@ public class Http11 extends Http {
 		return "HTTP/1.1";
 	}
 
+	/**
+	 * Sends the initial request line to the server and receives the initial response line
+	 * 
+	 * HTTP/1.1: sends the Host header
+	 */
 	@Override
 	protected void initialRequest(Command command) throws IOException {
 		String outputSentence = command + " " + resource + " " + toString();
