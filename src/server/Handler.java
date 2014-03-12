@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.io.InputStreamReader;
 
@@ -42,7 +43,10 @@ public class Handler implements Runnable {
 
 				parse(initialRequestLine,inFromClient,outToClient,headers);
 			}
-		} catch (Exception e) {
+		} catch (SocketTimeoutException e) {
+			System.out.println("Connection timed out");
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception");
 		} 
