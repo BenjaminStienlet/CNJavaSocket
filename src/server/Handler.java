@@ -8,7 +8,11 @@ import java.util.ArrayList;
 
 import support.Command;
 
-
+/**
+ * 
+ * 
+ * @author 	Tom Stappaerts, Benjamin Stienlet
+ */
 @SuppressWarnings("deprecation")
 public class Handler implements Runnable {
 	
@@ -28,7 +32,7 @@ public class Handler implements Runnable {
 			
 			while(!socket.isClosed()) {
 				socket.setSoTimeout(20000);
-				while ((initialRequestLine = inFromClient.readLine()) == null) {
+				while ((initialRequestLine = inFromClient.readLine()) == null || initialRequestLine.trim().isEmpty()) {
 					//Read again
 				}
 				System.out.println("Received: " + initialRequestLine);

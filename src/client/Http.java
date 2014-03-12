@@ -20,6 +20,11 @@ import org.jsoup.select.Elements;
 
 import support.Command;
 
+/**
+ * Class to execute the given HTTP command
+ * 
+ * @author 	Tom Stappaerts, Benjamin Stienlet
+ */
 @SuppressWarnings("deprecation")
 public abstract class Http {
 
@@ -30,12 +35,13 @@ public abstract class Http {
 	protected String resource;
 	protected String ip;
 	protected int port;
-	protected Socket clientSocket = null;
+	protected Socket clientSocket;
 	protected DataOutputStream outToServer;
 	protected DataInputStream inFromServer;
 
 	public Http(Command command, String host, String resource, String ip, int port) {
 		try {
+			// Create a new socket
 			Socket socket = new Socket(ip, port);
 			System.out.println("Socket estabilished: " + socket.toString() );
 			initialize(command, host, resource, ip, port, socket);
@@ -54,6 +60,7 @@ public abstract class Http {
 		this.ip = ip;
 		this.port = port;
 
+		// Create the outputdir
 		File file = new File(outputDir);
 		if (! file.exists()) {
 			file.mkdirs();
@@ -62,13 +69,16 @@ public abstract class Http {
 		try {
 			clientSocket = socket;
 			if (clientSocket.isClosed()) {
+				// Create a new socket
 				clientSocket = new Socket(ip, port);
 				System.out.println("Socket estabilished: " + clientSocket.toString() );
 			}
 
+			// Create the output- and inputstreams
 			outToServer = new DataOutputStream(clientSocket.getOutputStream());
 			inFromServer = new DataInputStream(clientSocket.getInputStream());
 
+			// Send the initial request line
 			initialRequest(command);
 
 			if (command.equals(Command.GET))
@@ -83,40 +93,54 @@ public abstract class Http {
 			outToServer.close();
 			inFromServer.close();
 		} catch (IOException e) {
-			System.out.println(e.toString());
+			System.out.println(e.getMessage());
 		} 
 	}
 
+	/**
+	 * Sends the initial request line
+	 */
 	protected abstract void initialRequest(Command command) throws IOException;
+	
 	protected abstract void put();
+	
 	protected abstract void get();
+	
 	protected abstract void head();
+	
 	protected abstract void post();
+	
 	protected abstract void executeGet(String host2, String resource2,String ip);
 
-	protected void getHtml(int contentLength) throws UnsupportedEncodingException,
-	FileNotFoundException, IOException {
+	/**
+	 * Get-request for a html-file
+	 */
+	protected void getHtml(int contentLength) throws UnsupportedEncodingException, FileNotFoundException, IOException {
 		String sentence;
 		String filename;
 
 		if(contentLength > 0) {
+			// Get the html file
 			System.out.println("Getting HTML FILE");
 			filename = outputDir + System.getProperty("file.separator") + outputFile;
 			BufferedWriter outToFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "utf-8"));
 
+			// Read bytes form server
 			byte[] bytes = new byte[contentLength];
 			inFromServer.readFully(bytes, 0, contentLength);
 			sentence = new String(bytes, "UTF-8");
+			
+			// Write bytes to file
 			outToFile.write(sentence);
-
 			outToFile.close();
 			System.out.println("Written to file: " + filename);
 
-			//Getting the images out of the html.
+			// Getting the images out of the html.
 			File input = new File(filename);
 			Document doc = Jsoup.parse(input, "UTF-8");
 			Elements imgs = doc.select("img");
 			for (int i = 0; i < imgs.size(); i++) {
+				// Get the uri of the image
 				Element el = imgs.get(i);
 				String uri = el.attr("src");
 				System.out.println("Found image: " + uri);
@@ -124,6 +148,7 @@ public abstract class Http {
 				String resourceImg;
 				String ipImg;
 				try {
+					// Get the host, resource and ip
 					String[] parsed = Client.parseURI(uri);
 					hostImg = parsed[0];
 					resourceImg = parsed[1];
@@ -153,6 +178,9 @@ public abstract class Http {
 
 	}
 
+	/**
+	 * Get-request for an image
+	 */
 	protected void getImage(String contentType, int contentLength) {
 		String filename;
 		String imageType = contentType.split("/")[1].trim();
@@ -163,12 +191,14 @@ public abstract class Http {
 			byte[] bytes = new byte[contentLength];
 
 			try {
+				// Read bytes
 				inFromServer.readFully(bytes, 0, contentLength);
 				File file = new File(filename);
 				if (!file.exists()) {
 					file.getParentFile().mkdirs();
 					file.createNewFile();
 				}
+				// Write to bytes
 				FileOutputStream writer = new FileOutputStream(file);
 				writer.write(bytes);					
 				writer.close();
@@ -184,12 +214,16 @@ public abstract class Http {
 		}
 	}
 
+	/**
+	 * Get-request for a redirection
+	 */
 	protected void getRedirection(String newLocation, int contentLength) {
 		String host2;
 		String resource2;
 		String ip2;
 		System.out.println("REDIRECTING \n");
 		try {
+			// Parse the uri
 			String[] parsed = Client.parseURI(newLocation);
 			host2 = parsed[0];
 			resource2 = parsed[1];
@@ -219,7 +253,6 @@ public abstract class Http {
 					//discard sentence
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -228,12 +261,18 @@ public abstract class Http {
 	}
 
 	/**
-	 * @throws IOException
+	 * Executes the head command
 	 */
 	protected void executeHead() throws IOException {
 		outToServer.writeBytes("\n");
 		System.out.println("Written output");
 		String status = inFromServer.readLine();
+		while (status.isEmpty() || status.trim().endsWith("100 Continue")) {
+			if (!status.trim().isEmpty())
+				System.out.println("Status: " + status);
+			status = inFromServer.readLine();
+		}
+
 		System.out.println("Status:  " + status);
 		System.out.println("Headers: \n");
 		String sentence1;

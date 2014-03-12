@@ -4,6 +4,11 @@ import java.io.IOException;
 
 import support.Command;
 
+/**
+ * Class to execute the given HTTP/1.0 command
+ * 
+ * @author 	Tom Stappaerts, Benjamin Stienlet
+ */
 @SuppressWarnings("deprecation")
 public class Http10 extends Http{
 

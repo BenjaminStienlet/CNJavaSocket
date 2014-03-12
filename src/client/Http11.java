@@ -7,6 +7,11 @@ import java.net.Socket;
 
 import support.Command;
 
+/**
+ * Class to execute the given HTTP/1.1 command
+ * 
+ * @author 	Tom Stappaerts, Benjamin Stienlet
+ */
 @SuppressWarnings("deprecation")
 public class Http11 extends Http {
 

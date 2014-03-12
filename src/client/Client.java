@@ -7,11 +7,21 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-
+/**
+* A HTPP/1.0 and HTPP/1.1 client
+*
+* Arguments: 		HTTPCommand URI Port HTTPversion
+* - HTTPCommand: 	HEAD, GET, PUT or POST
+* - URI: 			uniform resource identifier, e.g. www.google.com
+* - Port: 			the port number
+* - HTTPversion: 	HTTP/1.0 or HTTP/1.1
+*
+* @author Tom Stappaerts, Benjamin Stienlet
+*/
 public class Client {
 
 	public static void main(String[] args) {
-		Boolean exit = false;
+		boolean exit = false;
 		int errorCounter = 0;
 		while(exit != true && errorCounter <10) {
 			System.out.println("Input (x for exit): ");
@@ -25,19 +35,22 @@ public class Client {
 				}
 			}catch (Exception e) {
 				System.out.println("Something went wrong. Try again.");
-				System.out.println(e.getMessage());
+				System.out.println("Error: " + e.getMessage());
 				errorCounter++;
 			}
 		}
-		System.out.println("exit");
+		System.out.println("Exit");
 	}
 
 	/**
-	 * 
-	 * 
+	 * Parses and executes the given command.
+	 *
 	 * @param 	input
+	 * 			The command to execute
 	 * @throws 	IllegalArgumentException
+	 * 			Thrown when the given string does not follow the specified format
 	 * @throws 	UnknownHostException
+	 * 			(See parseURI)
 	 */
 	public static void command(String input) throws IllegalArgumentException, UnknownHostException {
 		String commandInput = null;
