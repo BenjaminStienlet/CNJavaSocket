@@ -14,14 +14,6 @@ import support.Command;
 public class Response11 extends Response {
 
 
-	/**
-	 * @param command
-	 * @param uri
-	 * @param inFromClient
-	 * @param outToClient
-	 * @param socket
-	 * @param headers
-	 */
 	public Response11(Command command, String uri, DataInputStream inFromClient, DataOutputStream outToClient, 
 			Socket socket, ArrayList<String> headers) {
 		super(command, uri, inFromClient, outToClient, socket, headers);

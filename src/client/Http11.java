@@ -24,14 +24,21 @@ public class Http11 extends Http {
 		super(command, host, resource, ip, port, socket);
 	}
 
+	/**
+	 * String description
+	 */
 	@Override
 	public String toString() {
 		return "HTTP/1.1";
 	}
 
+	/**
+	 * InitialRequestLine
+	 */
 	@Override
 	protected void initialRequest(Command command) throws IOException {
 		String outputSentence = command + " " + resource + " " + toString();
+		//Required HOST header
 		outputSentence += "\n" + "Host: " + host;
 		System.out.println("Input: " + outputSentence);
 		outToServer.writeBytes(outputSentence + "\n");
@@ -51,6 +58,7 @@ public class Http11 extends Http {
 		try{
 			outToServer.writeBytes("\n");
 			System.out.println("Written output");
+			//Read status, ignore 100 lines
 			String status = inFromServer.readLine();
 			while (status.isEmpty() || status.trim().endsWith("100 Continue")) {
 				System.out.println("Status: " + status);
@@ -65,6 +73,9 @@ public class Http11 extends Http {
 
 	}
 
+	/**
+	 * executes a new get request with same socket
+	 */
 	@Override
 	protected void executeGet(String hostImg, String resourceImg, String ipImg) {
 		if (!ipImg.equals(ip)) {
@@ -115,6 +126,7 @@ public class Http11 extends Http {
 
 	@Override
 	protected void post() {
+		//Post executes put method
 		this.put();
 	}
 

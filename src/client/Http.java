@@ -264,25 +264,30 @@ public abstract class Http {
 	 * Executes the head command
 	 */
 	protected void executeHead() throws IOException {
+		//Write end of headers: \n
 		outToServer.writeBytes("\n");
 		System.out.println("Written output");
+		//Getting status from client. If: 100 continue: continue
 		String status = inFromServer.readLine();
 		while (status.isEmpty() || status.trim().endsWith("100 Continue")) {
 			if (!status.trim().isEmpty())
 				System.out.println("Status: " + status);
 			status = inFromServer.readLine();
 		}
+		
 
 		System.out.println("Status:  " + status);
 		System.out.println("Headers: \n");
 		String sentence1;
 		boolean close = false;
+		//READING HEADERS
 		while((sentence1 = inFromServer.readLine()) != null && !sentence1.trim().isEmpty()) {
 			System.out.println(sentence1);
 			if (sentence1.trim().equalsIgnoreCase("Connection: close")) {
 				close = true;
 			}
 		}
+		//Close the socket if the client asks.
 		if (close) {
 			System.out.println("Socket closed by server");
 			clientSocket.close();
@@ -290,9 +295,11 @@ public abstract class Http {
 	}
 
 	/**
+	 * Handles the put request
 	 * @throws IOException
 	 */
 	protected void executePut() throws IOException {
+		//First: input the DATA that needs to be transmitted
 		System.out.println("What do you want to send? (terminate with enter)");
 		BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
 		String input = "";
@@ -301,16 +308,19 @@ public abstract class Http {
 			input += " " + inputString;
 		}
 		input = input.trim();
+		//Calculate headers
 		outToServer.writeBytes("Content-Length: " + input.getBytes("utf-8").length + "\n\n");
 		outToServer.writeBytes(input+"\n");
-	
 		System.out.println("Written output");
+		
+		//Read status from the server.
 		String status = inFromServer.readLine();
 		System.out.println("Status:  " + status);
 		while (status.isEmpty() || status.trim().endsWith("100 Continue")) {
 			System.out.println("Status: " + status);
 			status = inFromServer.readLine();
 		}
+		//print headers
 		System.out.println("Header: \n");
 		String sentence1;
 		boolean close = false;
@@ -320,6 +330,7 @@ public abstract class Http {
 				close = true;
 			}
 		}
+		//close if necessary
 		if (close) {
 			System.out.println("Socket closed by server");
 			clientSocket.close();
@@ -327,13 +338,13 @@ public abstract class Http {
 	}
 
 	/**
+	 * Handles a get request
 	 * @param status
 	 * @throws IOException
 	 * @throws UnsupportedEncodingException
 	 * @throws FileNotFoundException
 	 */
-	protected void executeGet(String status) throws IOException,
-			UnsupportedEncodingException, FileNotFoundException {
+	protected void executeGet(String status) throws IOException, UnsupportedEncodingException, FileNotFoundException {
 				String sentence;
 				String contentType = null;
 				String newLocation = null;
@@ -358,15 +369,19 @@ public abstract class Http {
 				//Getting file information. 2 possibilities: html or image. Others are not supported.
 				if(contentType.startsWith("text/html") && status.contains("200")) {
 					this.getHtml(contentLength);
+				//image
 				} else if(contentType.startsWith("image") && status.contains("200")) {
 					this.getImage(contentType, contentLength);
+				//redirect
 				} else if((status.contains("301") || status.contains("302") ||status.contains("307") ||status.contains("308")) && newLocation != null ) {
 					this.getRedirection(newLocation,contentLength);
-			
+				//Handle other status codes / content types
 				} else {
+					//Status is ok: content-type was not supported
 					if (status.contains("200"))
 						System.out.println("Content-type: " + contentType + " Not implemented.");
 					else
+						//The status was not ok.
 						System.out.println("Status not ok: " + status);
 				}
 				if (close) {

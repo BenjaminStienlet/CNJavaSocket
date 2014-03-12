@@ -14,6 +14,7 @@ public class Http10 extends Http{
 
 
 	/**
+	 * Constructor
 	 * @param command
 	 * @param host
 	 * @param resource
@@ -25,11 +26,17 @@ public class Http10 extends Http{
 	}
 
 
+	/**
+	 * String representation
+	 */
 	@Override
 	public String toString() {
 		return "HTTP/1.0";
 	}
 
+	/**
+	 * Handles the initialRequestLine
+	 */
 	@Override
 	protected void initialRequest(Command command) throws IOException {
 		String outputSentence = command + " " + resource + " " + toString();
@@ -37,6 +44,9 @@ public class Http10 extends Http{
 		outToServer.writeBytes(outputSentence + "\n");
 	}
 
+	/**
+	 * Handles the put
+	 */
 	@Override
 	public void put() {
 		try{
@@ -51,14 +61,19 @@ public class Http10 extends Http{
 		}
 	}
 
+	/**
+	 * Handles the get Request
+	 */
 	@Override
 	public void get() {
 		try{
+			//Read initialResponseLine
 			outToServer.writeBytes("\n");
 			System.out.println("Written output");
 			String status = inFromServer.readLine();
 			System.out.println("Status:  " + status);
 			System.out.println("Headers: \n");
+			
 			executeGet(status);
 			if (!clientSocket.isClosed()) {
 				System.out.println("Closing socket");
@@ -71,6 +86,9 @@ public class Http10 extends Http{
 	}
 
 
+	/**
+	 * Handles the head request
+	 */
 	@Override
 	public void head() {
 		try{
@@ -87,12 +105,18 @@ public class Http10 extends Http{
 	}
 
 
+	/**
+	 * Handles the post request
+	 */
 	@Override
 	public void post() {
 		put();
 	}
 
 
+	/**
+	 * Executes a new get. For HTTP 1.0 this means a new socket
+	 */
 	@Override
 	protected void executeGet(String host2, String resource2, String ip2) {
 		try {

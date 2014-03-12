@@ -18,6 +18,11 @@ import java.util.Scanner;
 
 import support.Command;
 
+/**
+ * Class to execute the received HTTP command on the server
+ * 
+ * @author 	Tom Stappaerts, Benjamin Stienlet
+ */
 public abstract class Response {
 
 	protected String uri;
@@ -26,8 +31,8 @@ public abstract class Response {
 	protected Socket socket;
 	protected ArrayList<String> headers;
 
-	public Response(Command command, String uri, DataInputStream inFromClient, DataOutputStream outToClient, Socket socket, ArrayList<String> headers) {
-
+	public Response(Command command, String uri, DataInputStream inFromClient, 
+			DataOutputStream outToClient, Socket socket, ArrayList<String> headers) {
 		this.uri = uri;
 		this.inFromClient = inFromClient;
 		this.outToClient = outToClient;
@@ -57,19 +62,18 @@ public abstract class Response {
 	public abstract String toString();
 
 	/**
-	 * @throws IOException
-	 * @throws FileNotFoundException
+	 * Executes the head-request
 	 */
 	protected boolean executeHead() throws IOException, FileNotFoundException {
 		if(uri.startsWith("/")) {
 			uri = uri.substring(1);
 		}
 
-		//		String regex = "\\s*\\.(html|png|jpg|gif)$";
-
+		// Creates a new file
 		File file = new File(uri);
 		if(file.exists() && !file.isDirectory()) {
 			if (uri.endsWith("html") || uri.endsWith("png") || uri.endsWith("jpg") || uri.endsWith("gif")) {
+				// List headers
 				List<String> headers = new ArrayList<String>();
 				headers.add(toString() + " 200 OK\n");
 				Calendar cal = Calendar.getInstance();
@@ -92,6 +96,7 @@ public abstract class Response {
 
 				headers.add("\n");
 
+				// Send and print headers
 				System.out.println("Headers sent to client:");
 				for (String header : headers) {
 					System.out.print(header);
@@ -111,7 +116,7 @@ public abstract class Response {
 	}
 
 	/**
-	 * 
+	 * Executes the get-request
 	 */
 	protected void executeGet() {
 		try{
@@ -121,13 +126,16 @@ public abstract class Response {
 			if (executeHead()){
 				File file = new File(uri);
 				if (uri.endsWith("html")) {
+					// Read html file
 					Scanner scan = new Scanner(file);
 					String content = scan.useDelimiter("\\Z").next();
 					System.out.println("Content of file: \n" + content);
+					// Write html file
 					outToClient.writeBytes(content);
 					scan.close();
 				}
 				else {
+					// Read file (other than html)
 					FileInputStream scan = new FileInputStream(file);
 					byte[] data = new byte[(int) file.length()];
 					scan.read(data);
@@ -141,11 +149,12 @@ public abstract class Response {
 	}
 
 	/**
-	 * 
+	 * Executes the put-request
 	 */
 	protected void executePut() {
 		try{
 			int length = 0;
+			// Get the content length
 			for(String header: headers) {
 				if (header.startsWith("Content-Length: ")) {
 					String[] split = header.split(" ");
@@ -155,6 +164,7 @@ public abstract class Response {
 			}
 
 			if (length > 0) {
+				// Read input
 				byte[] bytes = new byte[length];
 				inFromClient.readFully(bytes,0,length);
 
@@ -162,6 +172,7 @@ public abstract class Response {
 					uri = uri.substring(1);
 				}
 				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(uri));
+				// Write input
 				out.write(bytes);
 				out.close();
 				System.out.println("Written to File");

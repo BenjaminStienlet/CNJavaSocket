@@ -22,15 +22,20 @@ public class Handler implements Runnable {
 		this.socket = socket;
 	}
 	
+	/**
+	 * New handler: thread: run()
+	 */
 	@Override
 	public void run() {
 		try {
+			//Streams
 			DataInputStream inFromClient = new DataInputStream(socket.getInputStream()); 
 			DataOutputStream outToClient = new DataOutputStream(socket.getOutputStream());
 			ArrayList<String> headers = new ArrayList<String>();
 			String initialRequestLine;
 			
 			while(!socket.isClosed()) {
+				// Socket timeout
 				socket.setSoTimeout(20000);
 				while ((initialRequestLine = inFromClient.readLine()) == null || initialRequestLine.trim().isEmpty()) {
 					//Read again
@@ -54,11 +59,15 @@ public class Handler implements Runnable {
 		} 
 	}
 	
+	/**
+	 * Parses the given string
+	 */
 	private void parse(String input, DataInputStream inFromClient, DataOutputStream outToClient, ArrayList<String> headers) {
 		String commandInput = null;
 		String versionNumber = null;
 		String uri = null;
 		try {
+			// Parse uri
 			String[] inputs = input.split(" ");
 			commandInput = inputs[0];
 			uri = inputs[1];
@@ -66,6 +75,7 @@ public class Handler implements Runnable {
 		} catch (Exception e) {
 			throw new IllegalArgumentException();
 		}
+		
 		//parse command
 		Command command = null;
 		for(Command c : Command.values())
@@ -79,6 +89,5 @@ public class Handler implements Runnable {
 			new Response11(command, uri, inFromClient, outToClient, socket, headers);
 		else
 			throw new IllegalArgumentException();
-		
 	}
 }
