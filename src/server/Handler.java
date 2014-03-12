@@ -1,17 +1,15 @@
 package server;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.io.InputStreamReader;
 
 import support.Command;
 
 
+@SuppressWarnings("deprecation")
 public class Handler implements Runnable {
 	
 	Socket socket;
@@ -71,11 +69,10 @@ public class Handler implements Runnable {
 		if(command == null) throw new IllegalArgumentException();
 
 		//HTTP version
-		Response version;
 		if(versionNumber.equals("1.0") || versionNumber.equalsIgnoreCase("http/1.0"))
-			version = new Response10(command, uri, inFromClient, outToClient, socket, headers);
+			new Response10(command, uri, inFromClient, outToClient, socket, headers);
 		else if(versionNumber.equals("1.1") || versionNumber.equalsIgnoreCase("http/1.1"))
-			version = new Response11(command, uri, inFromClient, outToClient, socket, headers);
+			new Response11(command, uri, inFromClient, outToClient, socket, headers);
 		else
 			throw new IllegalArgumentException();
 		
