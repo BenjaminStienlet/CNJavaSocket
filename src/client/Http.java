@@ -61,7 +61,7 @@ public abstract class Http {
 
 		try {
 			clientSocket = socket;
-			if (!clientSocket.isConnected()) {
+			if (clientSocket.isClosed()) {
 				clientSocket = new Socket(ip, port);
 				System.out.println("Socket estabilished: " + clientSocket.toString() );
 			}
@@ -155,34 +155,32 @@ public abstract class Http {
 
 	protected void getImage(String contentType, int contentLength) {
 		String filename;
-		{
-			String imageType = contentType.split("/")[1].trim();
-			if(imageType.trim().contains("jpeg") || imageType.trim().contains("png") || imageType.trim().contains("gif")) {
+		String imageType = contentType.split("/")[1].trim();
+		if(imageType.trim().contains("jpeg") || imageType.trim().contains("png") || imageType.trim().contains("gif")) {
 
-				filename = System.getProperty("user.dir") + System.getProperty("file.separator") + outputDir + resource;
+			filename = System.getProperty("user.dir") + System.getProperty("file.separator") + outputDir + resource;
 
-				byte[] bytes = new byte[contentLength];
+			byte[] bytes = new byte[contentLength];
 
-				try {
-					inFromServer.readFully(bytes, 0, contentLength);
-					File file = new File(filename);
-					if (!file.exists()) {
-						file.getParentFile().mkdirs();
-						file.createNewFile();
-					}
-					FileOutputStream writer = new FileOutputStream(file);
-					writer.write(bytes);					
-					writer.close();
-					System.out.println("Image written to: " + filename);
-				} catch(IOException e) {
-					System.out.println(e.getMessage());
+			try {
+				inFromServer.readFully(bytes, 0, contentLength);
+				File file = new File(filename);
+				if (!file.exists()) {
+					file.getParentFile().mkdirs();
+					file.createNewFile();
 				}
-
-				System.out.println("\nImage type: " + imageType);
-				System.out.println("Image length: " + contentLength);
-			} else {
-				System.out.println("This client does not support the image type: "+imageType);
+				FileOutputStream writer = new FileOutputStream(file);
+				writer.write(bytes);					
+				writer.close();
+				System.out.println("Image written to: " + filename);
+			} catch(IOException e) {
+				System.out.println(e.getMessage());
 			}
+
+			System.out.println("\nImage type: " + imageType);
+			System.out.println("Image length: " + contentLength);
+		} else {
+			System.out.println("This client does not support the image type: "+imageType);
 		}
 	}
 
@@ -264,12 +262,16 @@ public abstract class Http {
 			input += " " + inputString;
 		}
 		input = input.trim();
-		outToServer.writeBytes("Content-Length: " + input.getBytes().length + "\n\n");
+		outToServer.writeBytes("Content-Length: " + input.getBytes("utf-8").length + "\n\n");
 		outToServer.writeBytes(input+"\n");
 	
 		System.out.println("Written output");
 		String status = inFromServer.readLine();
 		System.out.println("Status:  " + status);
+		while (status.isEmpty() || status.trim().endsWith("100 Continue")) {
+			System.out.println("Status: " + status);
+			status = inFromServer.readLine();
+		}
 		System.out.println("Header: \n");
 		String sentence1;
 		boolean close = false;

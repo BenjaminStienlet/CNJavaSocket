@@ -4,6 +4,7 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -22,7 +23,7 @@ public class Response11 extends Response {
 	 * @param socket
 	 * @param headers
 	 */
-	public Response11(Command command, String uri, BufferedReader inFromClient, DataOutputStream outToClient, 
+	public Response11(Command command, String uri, DataInputStream inFromClient, DataOutputStream outToClient, 
 			Socket socket, ArrayList<String> headers) {
 		super(command, uri, inFromClient, outToClient, socket, headers);
 	}
@@ -61,8 +62,8 @@ public class Response11 extends Response {
 	protected void put() {
 		try {
 			outToClient.writeBytes(toString() + " 100 Continue\n\n");
-			extractPut();
-			if (headers.contains("Connection: close")){
+			executePut();
+			if (headers.contains("Connection: close") && !socket.isClosed()){
 				socket.close();
 			}
 		} catch (IOException e) {

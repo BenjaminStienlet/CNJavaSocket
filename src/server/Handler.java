@@ -1,6 +1,7 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -21,27 +22,33 @@ public class Handler implements Runnable {
 	@Override
 	public void run() {
 		try {
-			BufferedReader inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
+			DataInputStream inFromClient = new DataInputStream(socket.getInputStream()); 
 			DataOutputStream outToClient = new DataOutputStream(socket.getOutputStream());
-			String initialRequestLine = inFromClient.readLine();
-			System.out.println("Received: " + initialRequestLine);
 			ArrayList<String> headers = new ArrayList<String>();
-			String header;
-			System.out.println("Headers:");
-			while((header = inFromClient.readLine()) != null && !header.equalsIgnoreCase("")) {
-				System.out.println(header);
-				headers.add(header);
+			String initialRequestLine;
+			
+			while(!socket.isClosed()) {
+				socket.setSoTimeout(20000);
+				while ((initialRequestLine = inFromClient.readLine()) == null) {
+					//Read again
+				}
+				System.out.println("Received: " + initialRequestLine);
+				String header;
+				System.out.println("Headers:");
+				while((header = inFromClient.readLine()) != null && !header.equalsIgnoreCase("")) {
+					System.out.println(header);
+					headers.add(header);
+				}
+
+				parse(initialRequestLine,inFromClient,outToClient,headers);
 			}
-			
-			parse(initialRequestLine,inFromClient,outToClient,headers);
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception");
 		} 
 	}
 	
-	private void parse(String input, BufferedReader inFromClient, DataOutputStream outToClient, ArrayList<String> headers) {
+	private void parse(String input, DataInputStream inFromClient, DataOutputStream outToClient, ArrayList<String> headers) {
 		String commandInput = null;
 		String versionNumber = null;
 		String uri = null;

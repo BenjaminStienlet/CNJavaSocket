@@ -2,8 +2,10 @@
  * 
  */
 package server;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,19 +26,19 @@ import support.Command;
 public abstract class Response {
 
 	protected String uri;
-	protected BufferedReader inFromClient;
+	protected DataInputStream inFromClient;
 	protected DataOutputStream outToClient;
 	protected Socket socket;
 	protected ArrayList<String> headers;
 
-	public Response(Command command, String uri, BufferedReader inFromClient, DataOutputStream outToClient, Socket socket, ArrayList<String> headers) {
+	public Response(Command command, String uri, DataInputStream inFromClient, DataOutputStream outToClient, Socket socket, ArrayList<String> headers) {
 
 		this.uri = uri;
 		this.inFromClient = inFromClient;
 		this.outToClient = outToClient;
 		this.socket = socket;
 		this.headers = headers;
-		
+
 		switch (command) {
 		case GET: get();
 		break;
@@ -48,15 +50,15 @@ public abstract class Response {
 		break;
 		}
 	}
-	
+
 	protected abstract void get();
-	
+
 	protected abstract void put();
-	
+
 	protected abstract void post();
-	
+
 	protected abstract void head();
-	
+
 	public abstract String toString();
 
 	/**
@@ -67,20 +69,18 @@ public abstract class Response {
 		if(uri.startsWith("/")) {
 			uri = uri.substring(1);
 		}
-		
-//		String regex = "\\s*\\.(html|png|jpg|gif)$";
-		
+
+		//		String regex = "\\s*\\.(html|png|jpg|gif)$";
+
 		File file = new File(uri);
 		if(file.exists() && !file.isDirectory()) {
 			if (uri.endsWith("html") || uri.endsWith("png") || uri.endsWith("jpg") || uri.endsWith("gif")) {
 				List<String> headers = new ArrayList<String>();
-				headers.add("HTTP/1.0 200 OK\n");
+				headers.add(toString() + " 200 OK\n");
 				Calendar cal = Calendar.getInstance();
 				DateFormat dateFormat = new SimpleDateFormat("E, dd/MM/yyyy HH:mm:ss z");
 				headers.add("Date: "+ dateFormat.format(cal.getTime()) + "\n");
-				Scanner scan = new Scanner(file);
-				String content = scan.useDelimiter("\\Z").next();
-				headers.add("Content-Length: " + content.length() + "\n");
+				headers.add("Content-Length: " + file.length() + "\n");
 
 				if(uri.endsWith("html")) {
 					headers.add("Content-Type: text/html\n");
@@ -99,19 +99,18 @@ public abstract class Response {
 
 				System.out.println("Headers sent to client:");
 				for (String header : headers) {
-					System.out.println(header);
+					System.out.print(header);
 					outToClient.writeBytes(header);
 				}
-				
-				scan.close();
+
 				return true;
 			}
 			else {
-				outToClient.writeBytes(toString() + " 404 File Not Found\n\n");
+				error404();
 				return false;
 			}
 		} else {
-			outToClient.writeBytes(toString() + " 404 File Not Found\n\n");
+			error404();
 			return false;
 		}
 	}
@@ -149,10 +148,9 @@ public abstract class Response {
 	/**
 	 * 
 	 */
-	protected void extractPut() {
+	protected void executePut() {
 		try{
 			String inputString;
-			String inputFromUser = "";
 			int length = 0;
 			for(String header: headers) {
 				if (header.startsWith("Content-Length: ")) {
@@ -161,39 +159,78 @@ public abstract class Response {
 					length = Integer.parseInt(number);
 				}
 			}
-	
+
 			if (length > 0) {
-				while (length > 0) {
-					inputString = inFromClient.readLine();
-					inputFromUser += inputString + "\n";
-					byte[] bytes = inputString.getBytes();
-					length -= bytes.length;
+				byte[] bytes = new byte[length];
+				inFromClient.readFully(bytes,0,length);
+
+				if(uri.startsWith("/")) {
+					uri = uri.substring(1);
 				}
+				BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(uri));
+				out.write(bytes);
+				out.close();
+				System.out.println("Written to File");
+				outToClient.writeBytes(toString() + " 200 OK\n\n");
+
+			} else {
+				error500();
 			}
-			else {
-				while (socket.isConnected() && (inputString = inFromClient.readLine()) != null) {
-					inputFromUser += inputString + "\n";
-				}
-			}
-			System.out.println("Input: \n" + inputFromUser);
-			if(uri.startsWith("/")) {
-				uri = uri.substring(1);
-			}
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(uri), "utf-8"));
-			out.write(inputFromUser);
-			out.close();
-	
-			outToClient.writeBytes(toString() + " 200 OK\n\n");
-	
 		}
+		
 		catch(Exception e) {
 			try{
-				outToClient.writeBytes(toString() + " 500 Internal Server Error\n\n");
-				System.out.println(e.toString());
+				error500();
+				System.out.println(e.getStackTrace());
 			} catch (Exception e2) {
-				System.out.println(e2.toString());
+				System.out.println(e2.getStackTrace());
 			}
 		}
 	}
 	
+	protected void error(String errorMessage) {
+		try {
+			outToClient.writeBytes("Content-Type: text/html");
+
+			List<String> headers = new ArrayList<String>();
+			Calendar cal = Calendar.getInstance();
+			DateFormat dateFormat = new SimpleDateFormat("E, dd/MM/yyyy HH:mm:ss z");
+			headers.add("Date: "+ dateFormat.format(cal.getTime()) + "\n");
+			headers.add("Content-Length: " + errorMessage.getBytes("utf-8").length + "\n");
+			headers.add("Content-Type: text/html\n");
+			headers.add("\n");
+
+			System.out.println("Headers sent to client:");
+			for (String header : headers) {
+				System.out.println(header);
+				outToClient.writeBytes(header);
+			}
+
+			outToClient.writeBytes(errorMessage);
+		}
+
+		catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	protected void error404() {
+		try {
+			outToClient.writeBytes(toString() + " 404 File Not Found\n");
+			error("<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><p>The requested URL was not found on this server.</p></body></html>");
+		}
+		catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	protected void error500() {
+		try {
+			outToClient.writeBytes(toString() + " 500 Server Error\n");
+			error("<html><head><title>500 Server Error</title></head><body><h1>500 Server Error</h1><p>An unexpected server error.</p></body></html>");
+		}
+		catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
 }

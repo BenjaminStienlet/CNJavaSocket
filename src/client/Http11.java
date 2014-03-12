@@ -48,10 +48,11 @@ public class Http11 extends Http {
 			System.out.println("Written output");
 			String status = inFromServer.readLine();
 			while (status.isEmpty() || status.trim().endsWith("100 Continue")) {
+				System.out.println("Status: " + status);
 				status = inFromServer.readLine();
 			}
 			System.out.println("Status:  " + status);
-			System.out.println("Headers: \n");
+			System.out.println("Headers:");
 			executeGet(status);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());

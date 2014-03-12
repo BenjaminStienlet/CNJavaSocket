@@ -4,6 +4,7 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -16,7 +17,7 @@ import support.Command;
  */
 public class Response10 extends Response {
 
-	public Response10(Command command, String uri, BufferedReader inFromClient, DataOutputStream outToClient, 
+	public Response10(Command command, String uri, DataInputStream inFromClient, DataOutputStream outToClient, 
 			Socket socket, ArrayList<String> headers) {
 		super(command, uri, inFromClient, outToClient, socket, headers);
 	}
@@ -28,7 +29,7 @@ public class Response10 extends Response {
 	@Override
 	protected void put() {
 		try {
-			extractPut();
+			executePut();
 			socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
